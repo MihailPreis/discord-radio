@@ -1,0 +1,7 @@
+venv/
+.idea/
+data/
+*.iml
+.env
+*.mp3
+*.log
