@@ -3,6 +3,7 @@ import logging
 import os
 import random
 from functools import partial
+from itertools import tee, islice
 from threading import Timer
 
 import requests
@@ -70,6 +71,45 @@ async def stop_handler(ctx):
         await player.disconnect()
 
 
+@client.command(name='new-playlist',
+                aliases=['np', 'gen'],
+                help="Generate new playlist. Add ' force' for force re-generation.")
+@commands.has_permissions(manage_channels=True)
+async def generate_new_playlist(ctx):
+    if not GENERATORS.get(ctx.guild.id):
+        await ctx.reply(':construction: Radio is not running.')
+        return
+    _cmd = len(f'{PREFIX}{ctx.command.name}')
+    _content = ctx.message.content
+    is_force = False
+    if len(_content) > _cmd + 1 and _content[_cmd + 1:] == 'force':
+        is_force = True
+    player_stopped = False
+    player = GROUP_CALLS.get(ctx.guild.id)
+    if player and player.is_playing() and is_force:
+        player_stopped = True
+        del GROUP_CALLS[ctx.guild.id]
+        player.stop()
+    GENERATORS[ctx.guild.id] = gen_playlist(ctx)
+    await ctx.reply(f':call_me: New playlist has been {"re" if is_force else ""}generated.')
+    if player_stopped:
+        GROUP_CALLS[ctx.guild.id] = player
+        on_audio_ended(ctx, None)
+
+
+@client.command(name='what-next',
+                aliases=['wn', 'next'],
+                help="Get an approximate list of following tracks.")
+@commands.has_permissions(manage_channels=True)
+async def what_next(ctx):
+    if not GENERATORS.get(ctx.guild.id):
+        await ctx.reply(':construction: Radio is not running.')
+        return
+    GENERATORS[ctx.guild.id], copy_playlist = tee(GENERATORS[ctx.guild.id])
+    _items = list(map(lambda x: rm_ext(os.path.basename(x), prefix=" - "), set(islice(copy_playlist, 5))))
+    await ctx.reply("Next tracks:\n" + "\n".join(_items))
+
+
 @client.command(name='list',
                 aliases=['l'],
                 help="Get a playlist.")
@@ -77,13 +117,13 @@ async def stop_handler(ctx):
 async def get_list_handler(ctx):
     _ftm = partial(rm_ext, prefix=" - ")
     result = ""
-    if os.path.isfile(get_track_path(ctx)):
+    if os.path.isdir(get_track_path(ctx)) and os.listdir(get_track_path(ctx)):
         result += "Tracks:\n"
         result += '\n -'.join(map(_ftm, filter(is_mp3, os.listdir(get_track_path(ctx)))))
-    if os.path.isfile(get_announce_path(ctx)):
+    if os.path.isdir(get_announce_path(ctx)) and os.listdir(get_announce_path(ctx)):
         result += "Announces:\n"
         result += '\n - '.join(map(_ftm, filter(is_mp3, os.listdir(get_announce_path(ctx)))))
-    if os.path.isfile(get_insert_path(ctx)):
+    if os.path.isdir(get_insert_path(ctx)) and os.listdir(get_insert_path(ctx)):
         result += "Inserts:\n"
         result += '\n'.join(map(_ftm, filter(is_mp3, os.listdir(get_insert_path(ctx)))))
     if not result:
@@ -170,13 +210,16 @@ async def _rm_file(ctx, path_fn):
 
 async def _get_attachments(ctx, patch_fn):
     if not ctx.message.attachments:
-        await ctx.reply('Missing attachments.')
+        await ctx.reply(':construction: Missing attachments.')
         return
     for att in ctx.message.attachments:
-        if not att.filename.endswith(".mp3"):
-            await ctx.reply(f'{att.filename} not mp3 file.')
+        if not is_mp3(att.filename):
+            await ctx.reply(f':construction: {att.filename} not mp3 file.')
             return
-        path = os.path.join(patch_fn(ctx), normalize_file_name(att.filename))
+        path = os.path.join(patch_fn(ctx), att.filename)
+        if os.path.isfile(path):
+            await ctx.reply(f':construction: {att.filename} file is exist.')
+            return
         try:
             with requests.get(att.url, stream=True) as r:
                 r.raise_for_status()
@@ -184,9 +227,10 @@ async def _get_attachments(ctx, patch_fn):
                 with open(path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
                         f.write(chunk)
+            await ctx.reply(f':call_me: {att.filename} was added successfully.')
         except Exception as e:
             _l.error(e)
-            await ctx.reply(f'{att.filename} failed download.')
+            await ctx.reply(f':construction: {att.filename} failed download.')
     GENERATORS[ctx.guild.id] = gen_playlist(ctx)
 
 
@@ -239,10 +283,6 @@ def is_mp3(f_name):
 
 def rm_ext(f_name, prefix=""):
     return f'{prefix}{f_name[:-4]}'
-
-
-def normalize_file_name(filename: str):
-    return filename.strip().replace(' ', '_')
 
 
 def get_track_path(ctx):
