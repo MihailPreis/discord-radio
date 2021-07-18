@@ -15,6 +15,7 @@ load_dotenv()
 
 GROUP_CALLS = {}
 GENERATORS = {}
+DEFAULT_MP3 = os.getenv('DEFAULT_MP3', 'default.mp3')
 PREFIX = os.getenv('DISCORD_PREFIX', '$')
 
 _l = logging.getLogger(os.path.basename(__file__))
@@ -263,7 +264,7 @@ def playlist_generator(ctx):
 
     if not tracks:
         while True:
-            yield os.path.join(os.getcwd(), os.getenv('DEFAULT_MP3', 'default.mp3'))
+            yield os.path.join(os.getcwd(), DEFAULT_MP3)
 
     if not inserts:
         while True:
@@ -284,6 +285,9 @@ def playlist_generator(ctx):
             yield track
             track_counter += 1
 
+
+if not os.path.isfile(DEFAULT_MP3):
+    _l.warning(f'{DEFAULT_MP3} not found! Please use `docker cp {DEFAULT_MP3} <container-name>:/app` for copy.')
 
 try:
     client.run(os.getenv('DISCORD_TOKEN'))
