@@ -47,7 +47,7 @@ async def play_handler(ctx):
     try:
         _gen = GENERATORS.get(ctx.guild.id)
         if _gen is None:
-            _gen = playlist_generator(ctx)
+            _gen = gen_playlist(ctx)
             GENERATORS[ctx.guild.id] = _gen
 
         player = await ctx.message.author.voice.channel.connect()
@@ -168,13 +168,13 @@ async def _get_attachments(ctx, patch_fn):
         except Exception as e:
             _l.error(e)
             await ctx.reply(f'{att.filename} failed download.')
-    GENERATORS[ctx.guild.id] = playlist_generator(ctx)
+    GENERATORS[ctx.guild.id] = gen_playlist(ctx)
 
 
 def on_audio_ended(ctx, _):
     _gen = GENERATORS.get(ctx.guild.id)
     if _gen is None:
-        _gen = playlist_generator(ctx)
+        _gen = gen_playlist(ctx)
         GENERATORS[ctx.guild.id] = _gen
     player = GROUP_CALLS.get(ctx.guild.id)
     if player:
@@ -204,7 +204,7 @@ async def rm(ctx, file_name, path):
                 player.stop()
         await asyncio.sleep(0.1)
         os.remove(rm_path)
-        GENERATORS[ctx.guild.id] = playlist_generator(ctx)
+        GENERATORS[ctx.guild.id] = gen_playlist(ctx)
         if player_stopped:
             GROUP_CALLS[ctx.guild.id] = player
             on_audio_ended(ctx, None)
@@ -238,7 +238,7 @@ def get_announce_path(ctx):
     return os.path.join(os.getcwd(), 'data', str(ctx.guild.id), 'announces')
 
 
-def playlist_generator(ctx):
+def gen_playlist(ctx):
     tracks = []
     if os.path.isdir(get_track_path(ctx)):
         tracks = list(map(
@@ -260,34 +260,31 @@ def playlist_generator(ctx):
             filter(is_mp3, os.listdir(get_announce_path(ctx)))
         ))
 
-    _l.info(f'(Re)Create generator for ID:{ctx.guild.id} with T:{len(tracks)} A:{len(announces)} Z:{len(inserts)}')
+    _l.debug(f'(Re)Create generator for ID:{ctx.guild.id} with T:{len(tracks)} A:{len(announces)} Z:{len(inserts)}')
 
     if not tracks:
         while True:
             yield os.path.join(os.getcwd(), DEFAULT_MP3)
 
-    if not inserts:
-        while True:
-            random.shuffle(tracks)
-            for track in tracks:
-                yield track
-
     track_counter = 0
     while True:
+        random.shuffle(tracks)
         for track in tracks:
             if track_counter == 3:
                 track_counter = 0
+                if len(inserts) > 0:
+                    yield random.choice(inserts)
                 if len(announces) > 0:
                     yield random.choice(announces)
+            if len(inserts) > 0:
                 yield random.choice(inserts)
-            if len(announces) > 0:
-                yield random.choice(announces)
             yield track
             track_counter += 1
 
 
 if not os.path.isfile(DEFAULT_MP3):
-    _l.warning(f'{DEFAULT_MP3} not found! Please use `docker cp {DEFAULT_MP3} <container-name>:/app` for copy.')
+    _l.warning(f'{DEFAULT_MP3} not found! Please use `docker cp {os.path.basename(DEFAULT_MP3)} <container-name>:/app'
+               f'` for copy.')
 
 try:
     client.run(os.getenv('DISCORD_TOKEN'))
