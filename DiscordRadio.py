@@ -119,10 +119,10 @@ async def get_list_handler(ctx):
     result = ""
     if os.path.isdir(get_track_path(ctx)) and os.listdir(get_track_path(ctx)):
         result += "Tracks:\n"
-        result += '\n -'.join(map(_ftm, filter(is_mp3, os.listdir(get_track_path(ctx)))))
+        result += '\n'.join(map(_ftm, filter(is_mp3, os.listdir(get_track_path(ctx)))))
     if os.path.isdir(get_announce_path(ctx)) and os.listdir(get_announce_path(ctx)):
         result += "Announces:\n"
-        result += '\n - '.join(map(_ftm, filter(is_mp3, os.listdir(get_announce_path(ctx)))))
+        result += '\n'.join(map(_ftm, filter(is_mp3, os.listdir(get_announce_path(ctx)))))
     if os.path.isdir(get_insert_path(ctx)) and os.listdir(get_insert_path(ctx)):
         result += "Inserts:\n"
         result += '\n'.join(map(_ftm, filter(is_mp3, os.listdir(get_insert_path(ctx)))))
