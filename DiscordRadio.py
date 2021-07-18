@@ -7,6 +7,7 @@ from threading import Timer
 
 import requests
 from discord import FFmpegPCMAudio
+from discord.ext import commands
 from discord.ext.commands import Bot
 from dotenv import load_dotenv
 
@@ -40,6 +41,7 @@ async def on_ready():
 @client.command(name='start-radio',
                 aliases=['p', 'play', 'start'],
                 help="Go on air.")
+@commands.has_permissions(manage_channels=True)
 async def play_handler(ctx):
     try:
         _gen = GENERATORS.get(ctx.guild.id)
@@ -58,6 +60,7 @@ async def play_handler(ctx):
 @client.command(name='stop-radio',
                 aliases=['s', 'stop'],
                 help="Stop a radio broadcast.")
+@commands.has_permissions(manage_channels=True)
 async def stop_handler(ctx):
     player = GROUP_CALLS.get(ctx.guild.id)
     if player:
@@ -69,6 +72,7 @@ async def stop_handler(ctx):
 @client.command(name='list',
                 aliases=['l'],
                 help="Get a playlist.")
+@commands.has_permissions(manage_channels=True)
 async def get_list_handler(ctx):
     _ftm = partial(rm_ext, prefix=" - ")
     result = ""
@@ -89,6 +93,7 @@ async def get_list_handler(ctx):
 @client.command(name='add-track',
                 aliases=['+t'],
                 help="Append track in playlist. Just send mp3 audio file with command.")
+@commands.has_permissions(manage_channels=True)
 async def add_track(ctx):
     await _get_attachments(ctx, get_track_path)
 
@@ -96,6 +101,7 @@ async def add_track(ctx):
 @client.command(name='add-insert',
                 aliases=['+i'],
                 help="Append insert in playlist. Just send mp3 audio file with command.")
+@commands.has_permissions(manage_channels=True)
 async def add_insert(ctx):
     await _get_attachments(ctx, get_insert_path)
 
@@ -103,6 +109,7 @@ async def add_insert(ctx):
 @client.command(name='add-announce',
                 aliases=['+a'],
                 help="Append announce in playlist. Just send mp3 audio file with command.")
+@commands.has_permissions(manage_channels=True)
 async def add_announce(ctx):
     await _get_attachments(ctx, get_announce_path)
 
@@ -110,6 +117,7 @@ async def add_announce(ctx):
 @client.command(name='rm-track',
                 aliases=['-t'],
                 help="Remove track from playlist.")
+@commands.has_permissions(manage_channels=True)
 async def rm_track(ctx):
     await _rm_file(ctx, get_track_path)
 
@@ -117,6 +125,7 @@ async def rm_track(ctx):
 @client.command(name='rm-insert',
                 aliases=['-i'],
                 help="Remove insert from playlist.")
+@commands.has_permissions(manage_channels=True)
 async def rm_insert(ctx):
     await _rm_file(ctx, get_insert_path)
 
@@ -124,6 +133,7 @@ async def rm_insert(ctx):
 @client.command(name='rm-announce',
                 aliases=['-a'],
                 help="Remove announce from playlist.")
+@commands.has_permissions(manage_channels=True)
 async def rm_announce(ctx):
     await _rm_file(ctx, get_announce_path)
 
