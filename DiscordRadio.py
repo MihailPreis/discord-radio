@@ -52,7 +52,7 @@ async def play_handler(ctx):
         on_audio_ended(ctx, None)
     except Exception as e:
         _l.error(e)
-        await ctx.reply('🚧 Startup error. Try to connect to the voice channel and repeat the command.')
+        await ctx.reply(':construction: Startup error. Try to connect to the voice channel and repeat the command.')
 
 
 @client.command(name='stop-radio',
@@ -135,7 +135,7 @@ async def _rm_file(ctx, path_fn):
         await ctx.reply(result)
     except Exception as e:
         _l.error(e)
-        await ctx.reply(f'🚧 Incorrect command. Example: {PREFIX}{ctx.command.name} <file name from !list>')
+        await ctx.reply(f':construction: Incorrect command. Example: {PREFIX}{ctx.command.name} <file name from !list>')
 
 
 async def _get_attachments(ctx, patch_fn):
@@ -181,7 +181,7 @@ async def rm(ctx, file_name, path):
     try:
         items = list(map(rm_ext, filter(is_mp3, os.listdir(path))))
         if file_name not in items:
-            return '🚧 File not found'
+            return ':construction: File not found'
         rm_path = os.path.join(path, file_name + '.mp3')
         player = GROUP_CALLS.get(ctx.guild.id)
         player_stopped = False
@@ -197,10 +197,10 @@ async def rm(ctx, file_name, path):
         if player_stopped:
             GROUP_CALLS[ctx.guild.id] = player
             on_audio_ended(ctx, None)
-        return '🤙 File was deleted successfully'
+        return ':call_me: File was deleted successfully'
     except Exception as e:
         _l.error(f'ID:{ctx.guild.id} rm {file_name} error: {e}')
-        return '🚧 An error occurred while deleting the file. Please check !list.'
+        return ':construction: An error occurred while deleting the file. Please check !list.'
 
 
 def is_mp3(f_name):
