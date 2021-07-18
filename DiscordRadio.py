@@ -139,6 +139,25 @@ async def rm_announce(ctx):
     await _rm_file(ctx, get_announce_path)
 
 
+class CustomHelpCommand(commands.DefaultHelpCommand):
+    async def prepare_help_command(self, ctx, command=None):
+        self.no_category = "Commands"
+        await super().prepare_help_command(ctx, command)
+
+    def get_ending_note(self):
+        return super().get_ending_note() + """
+
+# How it work?
+
+Radio works on principle of playing a random list of tracks.
+An 'insert' is played between each 'track' (and 'announce').
+Every third 'track' is played a random 'announce'.
+"""
+
+
+client.help_command = CustomHelpCommand()
+
+
 async def _rm_file(ctx, path_fn):
     try:
         track_name = ctx.message.content[len(f'{PREFIX}{ctx.command.name} '):]
