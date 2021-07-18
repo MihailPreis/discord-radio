@@ -18,20 +18,20 @@ Radio server for Discord voice rooms.
    LOG_LEVEL=DEBUG # default: INFO | see https://docs.python.org/3/howto/logging.html#logging-levels
    LOG_FILE=/var/log/DiscordRadio.log # if specified, log file will be writing
    ```
-   *For get `id` and `hash` see [this](https://core.telegram.org/api/obtaining_api_id)*
+   *For create Discord bot see [this](https://discordpy.readthedocs.io/en/stable/discord.html)*
 
 2. Create `default.mp3` audio for loop playing if channel not have tracks.
 
 3. Run server
    ```shell
-   $ docker build -t discrod-radio .
-   $ docker run -d --env-file .env --mount source=discord-radio-data,target=/app/data --name discrod-radio discord-radio:latest
-   $ docker cp default.mp3 discrod-radio:/app
+   $ docker pull ghcr.io/mihailpreis/discord-radio:master
+   $ docker run -d --env-file .env --mount source=discord-radio-data,target=/app/data --name discord-radio ghcr.io/mihailpreis/discord-radio:master
+   $ docker cp default.mp3 discord-radio:/app
    ```
 
-4. Add you **radio** account in group.
+4. Add you **radio** bot to server.
 
-5. Send `<you_prefix or $>help` in group for get help.
+5. Send `<you_prefix or $>help` in text channel for get help.
 
 ---
 
