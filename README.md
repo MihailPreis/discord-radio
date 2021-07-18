@@ -1,4 +1,4 @@
-# 🔊 DiscordRadio
+# 🔊 DiscordRadio [![Create and publish a Docker image](https://github.com/MihailPreis/discord-radio/actions/workflows/deploy-image.yml/badge.svg?branch=master)](https://github.com/MihailPreis/discord-radio/actions/workflows/deploy-image.yml)
 
 Radio server for Discord voice rooms.
 
